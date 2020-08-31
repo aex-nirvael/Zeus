@@ -4,30 +4,38 @@ Rooftop Object Detection
 ## Introduction
 Presented here is a project involving an implementation of a neural network architecture that has the aim of detecting rooftops in a typical 'object detection' task. But why is it called Zeus? For two main reasons; firstly Zeus is the god of the sky and we are detecting rooftops from aerial drone photographs. Secondly, because Zeus was the first god to inhabit Olympus and birth the future gods. This project was my first ambitious AI-related project and I hope like Zeus it will spawn many others that follow in its footsteps. I'm not going to dwell too long on the background, theory, or exact nature of neural networks. Many articles and resources are available for this and my attempt at rehashing this history would not do it justice. Instead, I will focus on the problems I faced with this project and how I overcame them. I find the most useful resources online (especially while attempting this project) were those that focussed on the implementation rather than getting caught up in theory. I will walk through the project and code in chronological order which also closely follows the order of implementation of each component.
 
-WHY? WHY CNNS?
+A brief explainer on the origins of this project: originally it was a code test sent by a company, but I felt that I needed to finish it. As I progressed through the project I continued to learn about how exactly to implement a neural network and obtain results from working code. This was very valuable to me, as while I have education in neural network theory, the practical nature of actual implementation I feel is something you can only get from experience. As for the tools I chose, Mask-RCNN is a commonly used and well understood network that performs well in object detection tasks. Therefore, I decided to use Mask-RCNN as it had pre-trained weights available and would have lots of documentation (for specific resources used, see references). Faster R-CNN was also considered, but Mask R-CNN also has the option of outputting masks for each object (i.e. performing object segmentation as well as detection).
 
 ## First Steps
-The first step in any project is retrieving the data and then processing it into a state that you can actually work with. The data in this case is from 
+The first step in any project is retrieving the data and then processing it into a state that you can actually work with. The data in this case is from the Sensefly Crop Field (RGB) dataset. This is a dataset of 356 high-resolution images of a village and surrounding farmland in Switzerland. These photos are not labelled in any way, so the first task was to annotate the data manually. I used LabelImg for this because it was simple. Once the .exe file is downloaded, all that is required is to point the program at the batch of images and load each one sequentially. Once loaded, you draw a box around each rooftop (NB: rooftops was essentially an arbitrary choice, it could have easily been trees for example, but I found that manually labelling each tree would have been too time-consuming. Also, perhaps the network would have struggled a little more with a tree as they aren't as well-defined and obvious as a rooftop.) and add a label. As we are manually labelling, we must follow some principles for the sake of the network. I labelled every single rooftop in an image, including partial or occluded roofs. I aimed to ensure every visible part of the roof was inside the bounding box, while also optimising for the smallest box possible. Additionally, if I was unsure if something was a 'true' rooftop (e.g. a tarpaulin on the ground) or I was unsure what the object was, I didn't label it. How could I expect a neural net to know if something is a rooftop, if the 100-billion-neuron neural net in my head can't do that? So I left those out. Once the painstaking process of labelling all the images was done, I was left with 160 annotations for 160 images (as any image without a rooftop was not labelled, and thus was removed from the dataset). This not an optimum amount of data, however as we are trying to implement transfer learning and only tuning the network towards rooftop identification, I decided it was ok to proceed. 
 
----unfinished---
-talk about labelling
-dependencies and colab
-resizing
-data split
-skipping no-annotations
+Google Colab was the obvious choice for this project. Mainly because I don't have access to a GPU and Colab provides free use of a Tesla K80 GPU for up to 12 hours. Amazon's AWS services were also an option here, and perhaps would have been quicker to train, but for a personal project a free GPU will be sufficient. Deep neural networks, and especially one of the size of Mask-RCNN, take a while to train without a GPU (for further information, my first round of training without a GPU would have taken over 20 hours and failed halfway through. The GPU performed 20 epochs of training in less than an hour.) There are issues with using Colab that we will discuss. The first of these is that Colab natively runs Tensorflow 2.x, with the option of downgrading to 1.15.2. Mask R-CNN requires 1.15 or less, and using the magic function to downgrade to 1.x within Colab did not work, so I had to pip install Tensorflow 1.14 and then install the necessary CUDA drivers for GPU support. This is not an ideal solution as Google prefers you not to pip install with Colab, but the ad-hoc solution I used seems to work. 
+
+The data preprocessing was a time-consuming step but the most important in any data science project. Specific issues I had to fix here included removing any image that didn't have a matching annotation file. I could have done this manually but what is the point in being a programmer if I can't automate things, right? Another issue was automatically seperating the training and testing dataset. The code template I was following had done this by manually selecting a cutoff point given the size of their dataset, but this wasn't clean enough for me. Code has to reusable and adaptable, so I changed this so the code automatically calculates what 80% of the entire dataset is, and cuts off the training set after that point. And as mentioned, the images are very high resolution (4608x3456). This would have likely caused issues with training time furhter down the line, so I resized them all to 800x600 (this was a bit of guesswork, I just wanted them to be smaller but retain some level of detail.). Resizing the whole dataset also maintained uniformity. However, after I had done this I realised that the annotations would still be for the original resolution, so I also had to resize the annotations. This was done by multiplying the coordinates by the ratio of the new resolution to the old one. Once all this was achieved, the load dataset functions could be run. 
 
 ## Training
-training (link to dependencies, GPU)
+As mentioned, most the work in the training phase actually came down to issues with using the GPU and the dependencies. An initial run of the training with only 5 epochs was taking over 4.5 hours per epoch. This was on the CPU-only mode of Tensorflow, as I had downgraded the Tensorflow version. After ascertaining I indeed was not using the GPU, I reinstalled the CUDA drivers and reran a GPU device check. This showed I was connected to a GPU, and this was confirmed when rerunning the training resulted in one epoch taking around 6 minutes. A definite improvement and a testimony to parallel processing. I neded up running the training for 20 epochs, but I could have extended this for possible improvements in the network's performance. Pre-trained weights were loaded from a model trained on the MS COCO dataset. Bear in mind here we are only training the 'heads' layers which means we are training the deeper output layers for rooftop detection while keeping the earlier layers locked. 
 
 ## Outcomes
-results
+After training the model was evaluated on both the test set (which it hasn't seen) and the training set. Mean absolute precision is a common metric used for object detection tasks. It involves finding the overlap between predicted and actual bounding boxes (or intersection over union), calculating the precision and recall (where precision is the percentage of correctly predicted boxes out of all boxes, and recall is the percentage of correct boxes out of all objects), plotting the resulting precision-recall curve, and then calculating the area under this curve. It lies between 0 and 1 with 1 being a perfect model. The mean absolute precision is just the absolute precision across all images. 
+
+Results from my experiments were as follows: 
+
+Train mAP: 0.824
+Test mAP: 0.547
+
 plotting
 embed resulting images
 video
 
 ## References
 
-
+https://www.sensefly.com/education/datasets/?dataset=1502
+https://arxiv.org/abs/1703.06870
+https://machinelearningmastery.com/how-to-train-an-object-detection-model-with-keras/
+https://medium.com/practical-deep-learning/a-complete-transfer-learning-toolchain-for-semantic-segmentation-3892d722b604
+https://towardsdatascience.com/creating-your-own-object-detector-ad69dda69c85
+https://github.com/tzutalin/labelImg
 
 
 
