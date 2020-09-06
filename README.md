@@ -33,8 +33,12 @@ After evaluation of the model, it's time to have some fun! Images were fed into 
 
 One failed experiment within the project was the attempt to obtain a video output of predictions within the model. Mask R-CNN has the ability to predict on video if we seperate the video into frames and predict on each frame then sow the frames back together. However, due to deprecations within Colab (and the function cv2.imshow) I could not get the functions to work correctly. Attempts involved short videos of only 15 seconds, but there may have been some issue with buffer size, or perhaps Colab just doesn't enjoy video, but the notebook continually crashed during these executions and the result was nothing more than a corrupt video file. If anyone has any insight into this please do let me know.
 
-##Future Implications
+## Future Implications
 Overall the project can be labelled a success. The main goals of the project were achieved, which were to learn from direct experience and for all the code to run correctly. Improvements to the data will yield better performance in the metrics. Increasing the sample size is an obvious first step, but currently is outside the scope of this investigation due to the high time demand that comes with hand-labelling data. Another method to increase the size of data seen by the model would be data augmentation. Flipping, rotating, and otherwise manipulating the images would give the model a more diverse array of rooftops in different positions and angles and would be very beneficial to the external validity of the model. Indeed, it would be necessary in order to implement this model anywhere other than the village and surrounding farmland in Switzerland that the images were originally taken from. This is something that should be considered in any computer vision project and would have increased the performance here. Also, training for more epochs or, even more appropriate, printing a proper loss curve to find the ideal number of epochs before overfitting would naturally be the optimal procedure here.
+
+
+By Alex Whelan
+All rights to their respective authors.
 
 ## References
 
