@@ -38,6 +38,7 @@ Overall the project can be labelled a success. The main goals of the project wer
 
 
 By Alex Whelan
+
 All rights to their respective authors.
 
 ## References
